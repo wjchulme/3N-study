@@ -86,7 +86,7 @@ survey_baseline  <- survey %>%
 survey_avg_long <- survey %>%
   group_by(ptid, phase) %>%
   summarise(
-    nfr_score=mean(nfr_score),
+    nfr_score=(mean(nfr_score)),
   ) %>%
   left_join(survey_baseline, by="ptid")
 

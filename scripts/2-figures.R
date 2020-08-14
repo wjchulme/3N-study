@@ -103,6 +103,25 @@ plot_scatter <-
   theme(legend.justification=c(0,1), legend.position = c(0.01, 0.99), legend.title = element_blank())
 
 
+
+## histogram ##
+
+plot_hist <-
+  survey_avg_long %>%
+  filter(phase!="p1_pre") %>%
+  ggplot() +
+  geom_bar(aes(x=nfr_score, group=phase), colour="white", stat="count", width=0.98)+
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), breaks=seq(0,50,2))+
+  scale_x_continuous(breaks=seq(0,10,1), limits=c(-0.5, 10.5))+
+  facet_wrap(facets=vars(phase), ncol=1)+
+  labs(
+    title="NfR score",
+    x="score", y="Respondents")+
+  hist_theme+
+  NULL
+
+
+
 ggsave(filename=here::here("figures", "each.png"), plot_each)
 
 ggsave(filename=here::here("figures", "scatter.png"), plot_scatter)
@@ -116,6 +135,57 @@ plot_line <-
   theme(
     legend.position='bottom'
   )
+
+
+## sumary stats
+
+
+
+survey_avg_long %>% 
+  filter(phase !="p1_pre") %>%
+  group_by(phase) %>%
+  summarise(
+    n=n(),
+    mean = mean(nfr_score, na.rm=TRUE),
+    mean_bsci = list(Hmisc::smean.cl.boot(nfr_score, conf.int=0.95, B=100000, reps=FALSE)),
+    mean.ll = map_dbl(mean_bsci, ~.[2]),
+    mean.ul = map_dbl(mean_bsci, ~.[3]),
+    median = median(nfr_score, na.rm=TRUE),
+    median_bsci = list(DescTools::MedianCI(nfr_score, conf.level=0.95, na.rm = TRUE, R=100000, method="boot")),
+    median.ll = map_dbl(median_bsci, ~.[2]),
+    median.ul = map_dbl(median_bsci, ~.[3]),
+    
+    mean_text = willsutils::print_est2bracket(mean, mean.ll, mean.ul, 1),
+    median_text = willsutils::print_est2bracket(median, median.ll, median.ul, 1),
+  ) %>%
+  select(phase, mean_text, median_text)
+
+
+
+
+
+
+survey_avg_wide %>% 
+  ungroup() %>%
+  filter(is.na(p3_post), !is.na(p2_during)) %>%
+  summarise(
+    n=n(),
+    mean = mean(p2_during, na.rm=TRUE),
+    mean_bsci = list(Hmisc::smean.cl.boot(p2_during, conf.int=0.95, B=100000, reps=FALSE)),
+    mean.ll = map_dbl(mean_bsci, ~.[2]),
+    mean.ul = map_dbl(mean_bsci, ~.[3]),
+    median = median(p2_during, na.rm=TRUE),
+    median_bsci = list(DescTools::MedianCI(p2_during, conf.level=0.95, na.rm = TRUE, R=100000, method="boot")),
+    median.ll = map_dbl(median_bsci, ~.[2]),
+    median.ul = map_dbl(median_bsci, ~.[3]),
+    
+    mean_text = willsutils::print_est2bracket(mean, mean.ll, mean.ul, 1),
+    median_text = willsutils::print_est2bracket(median, median.ll, median.ul, 1),
+  ) %>%
+  select(mean_text, median_text)
+
+
+
 
 
 ## model #
